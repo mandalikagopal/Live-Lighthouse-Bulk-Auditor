@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Lighthouse Bulk Audit Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6">
+  <div class="max-w-6xl mx-auto space-y-8">
+    <div class="border-b border-slate-800 pb-4">
+      <h1 class="text-2xl font-bold text-white">Live Lighthouse Bulk Auditor</h1>
+      <p class="text-sm text-slate-400">Paste your URLs, stream live terminal logs, and view performance summaries.</p>
+    </div>
+
+    <!-- Input Section -->
+    <div id="input-section" class="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
+      <label class="block text-sm font-semibold text-indigo-400">Enter URLs (one per line):</label>
+      <textarea id="urls-input" rows="6" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-indigo-500 font-mono" placeholder="https://example.com
+https://example.org"></textarea>
+      <button onclick="startAudits()" id="run-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition">Run Audits Now</button>
+    </div>
+
+    <!-- Live Terminal Box (Hidden until started) -->
+    <div id="terminal-section" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-3">
+      <h2 class="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Live Audit Execution Logs</h2>
+      <div id="terminal-logs" class="bg-slate-950 border border-slate-800 rounded-lg p-4 h-64 overflow-y-auto font-mono text-xs text-slate-300 whitespace-pre-wrap"></div>
+    </div>
+
+    <!-- Results Dashboard Section (Hidden until complete) -->
+    <div id="dashboard-section" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-white">Audit Summary Results</h2>
+          <p id="meta" class="text-xs text-slate-400"></p>
+        </div>
+        <button onclick="resetApp()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs font-semibold">Run New Audit</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+          <h3 class="text-indigo-400 font-semibold text-sm">Mobile Averages</h3>
+          <div id="mobile-cards" class="grid grid-cols-3 gap-3"></div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+          <h3 class="text-indigo-400 font-semibold text-sm">Desktop Averages</h3>
+          <div id="desktop-cards" class="grid grid-cols-3 gap-3"></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-800/70 text-slate-300 uppercase text-xs">
+            <tr>
+              <th class="p-4">URL</th>
+              <th class="p-4 text-center">Mobile Perf</th>
+              <th class="p-4 text-center">Desktop Perf</th>
+              <th class="p-4 text-right">Reports & Recs</th>
+            </tr>
+          </thead>
+          <tbody id="url-table" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-3xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-start">
+        <h3 id="modal-url" class="font-semibold text-lg break-all text-indigo-300"></h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl">×</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+          <div class="flex justify-between items-center"><h4 class="font-semibold text-indigo-400 text-sm">Mobile</h4><a id="modal-mobile-report" href="#" target="_blank" class="text-xs bg-indigo-600 px-3 py-1 rounded text-white">Full Report</a></div>
+          <div id="modal-mobile-recs" class="space-y-2 text-xs"></div>
+        </div>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+          <div class="flex justify-between items-center"><h4 class="font-semibold text-indigo-400 text-sm">Desktop</h4><a id="modal-desktop-report" href="#" target="_blank" class="text-xs bg-indigo-600 px-3 py-1 rounded text-white">Full Report</a></div>
+          <div id="modal-desktop-recs" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allPages = [];
+
+    async function startAudits() {
+      const urlsText = document.getElementById('urls-input').value.trim();
+      if (!urlsText) return alert('Please enter at least one URL');
+
+      document.getElementById('input-section').classList.add('hidden');
+      document.getElementById('terminal-section').classList.remove('hidden');
+      const logsBox = document.getElementById('terminal-logs');
+      logsBox.textContent = 'Connecting to audit server...\n';
+
+      try {
+        const response = await fetch('/api/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urlsText })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          
+          const lines = chunk.split('\n\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const payload = JSON.parse(line.substring(6));
+              if (payload.type === 'log') {
+                logsBox.textContent += payload.message + '\n';
+                logsBox.scrollTop = logsBox.scrollHeight;
+              } else if (payload.type === 'done') {
+                renderDashboard(payload.data);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        logsBox.textContent += `\n❌ Error: ${err.message}`;
+      }
+    }
+
+    const badge = score => {
+      const color = score >= 90 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                  : score >= 50 ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                  : 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+      return `<span class="px-2.5 py-1 rounded-full border font-semibold ${score !== undefined ? color : 'bg-slate-800 text-slate-500'}">${score ?? 'N/A'}</span>`;
+    };
+
+    function renderDashboard(data) {
+      allPages = data.pages;
+      document.getElementById('terminal-section').classList.add('hidden');
+      document.getElementById('dashboard-section').classList.remove('hidden');
+      document.getElementById('meta').textContent = `Audited ${data.totalUrls} URLs in ${data.durationMinutes} mins`;
+
+      document.getElementById('mobile-cards').innerHTML = `
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-center"><div class="text-slate-400 text-xs">Perf</div><div class="text-2xl font-bold">${data.overall.mobile.performance}</div></div>
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-center"><div class="text-slate-400 text-xs">A11y</div><div class="text-2xl font-bold">${data.overall.mobile.accessibility}</div></div>
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-center"><div class="text-slate-400 text-xs">SEO</div><div class="text-2xl font-bold">${data.overall.mobile.seo}</div></div>
+      `;
+
+      document.getElementById('desktop-cards').innerHTML = `
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-center"><div class="text-slate-400 text-xs">Perf</div><div class="text-2xl font-bold">${data.overall.desktop.performance}</div></div>
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-center"><div class="text-slate-400 text-xs">A11y</div><div class="text-2xl font-bold">${data.overall.desktop.accessibility}</div></div>
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-center"><div class="text-slate-400 text-xs">SEO</div><div class="text-2xl font-bold">${data.overall.desktop.seo}</div></div>
+      `;
+
+      document.getElementById('url-table').innerHTML = data.pages.map((p, i) => `
+        <tr class="hover:bg-slate-800/40">
+          <td class="p-4 font-medium text-slate-200 max-w-sm truncate">${p.url}</td>
+          <td class="p-4 text-center">${badge(p.mobile?.scores.performance)}</td>
+          <td class="p-4 text-center">${badge(p.desktop?.scores.performance)}</td>
+          <td class="p-4 text-right">
+            <button onclick="openModal(${i})" class="text-indigo-400 hover:underline text-xs font-semibold">Recommendations →</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openModal(idx) {
+      const p = allPages[idx];
+      document.getElementById('modal-url').textContent = p.url;
+      document.getElementById('modal-mobile-report').href = p.mobile?.reportFile || '#';
+      document.getElementById('modal-mobile-recs').innerHTML = p.mobile?.recommendations.map(r => `<div class="bg-slate-900 p-2 rounded border border-slate-800 flex justify-between"><span>${r.title}</span><span class="text-amber-400">${r.displayValue || r.savingsMs + 'ms'}</span></div>`).join('') || 'None';
+      document.getElementById('modal-desktop-report').href = p.desktop?.reportFile || '#';
+      document.getElementById('modal-desktop-recs').innerHTML = p.desktop?.recommendations.map(r => `<div class="bg-slate-900 p-2 rounded border border-slate-800 flex justify-between"><span>${r.title}</span><span class="text-amber-400">${r.displayValue || r.savingsMs + 'ms'}</span></div>`).join('') || 'None';
+      document.getElementById('modal').classList.remove('hidden');
+    }
+
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+    function resetApp() {
+      document.getElementById('dashboard-section').classList.add('hidden');
+      document.getElementById('input-section').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "lighthouse-bulk-dashboard",
+  "version": "1.0.0",
+  "description": "Bulk Lighthouse audit dashboard with Express and live log streaming",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lighthouse",
+    "performance",
+    "audits",
+    "seo"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "chrome-launcher": "^1.2.3",
+    "express": "^5.3.0",
+    "lighthouse": "^13.6.0",
+    "p-limit": "^7.3.3"
+  }
+}
