@@ -35,9 +35,9 @@ https://example.org"></textarea>
         </div>
 <div class="flex items-center gap-3">
   <!-- Excel Export Button -->
-  <a href="/api/export-excel" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center gap-2 transition shadow-lg">
+  <button onclick="excelReport()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center gap-2 transition shadow-lg">
     📊 Download Excel Report
-  </a>
+  </button>
   
   <!-- Run New Audit Button -->
   <button onclick="resetApp()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs font-semibold transition">
@@ -190,6 +190,10 @@ https://example.org"></textarea>
       document.getElementById('dashboard-section').classList.add('hidden');
       document.getElementById('input-section').classList.remove('hidden');
     }
+    function excelReport() {
+  // Trigger the download route from the backend server
+  window.location.href = '/api/export-excel';
+}
   </script>
 </body>
 </html>
