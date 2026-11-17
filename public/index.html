@@ -33,7 +33,17 @@ https://example.org"></textarea>
           <h2 class="text-xl font-bold text-white">Audit Summary Results</h2>
           <p id="meta" class="text-xs text-slate-400"></p>
         </div>
-        <button onclick="resetApp()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs font-semibold">Run New Audit</button>
+<div class="flex items-center gap-3">
+  <!-- Excel Export Button -->
+  <a href="/api/export-excel" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center gap-2 transition shadow-lg">
+    📊 Download Excel Report
+  </a>
+  
+  <!-- Run New Audit Button -->
+  <button onclick="resetApp()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs font-semibold transition">
+    Run New Audit
+  </button>
+</div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
+import ExcelJS from 'exceljs';
 
 const app = express();
 app.use(express.json());
@@ -161,6 +162,92 @@ app.post('/api/run', async (req, res) => {
   sendLog(`\n🎉 All audits completed in ${durationMinutes} mins! Rendering dashboard...`);
   
   res.write(`data: ${JSON.stringify({ type: 'done', data: dashboardData })}\n\n`);
+  res.end();
+});
+
+app.get('/api/export-excel', async (req, res) => {
+  const resultsPath = './public/results.json';
+  if (!fs.existsSync(resultsPath)) {
+    return res.status(404).send('No audit results found. Run an audit first.');
+  }
+
+  const data = JSON.parse(fs.readFileSync(resultsPath, 'utf-8'));
+  
+  const workbook = new ExcelJS.Workbook();
+  
+  // --- SHEET 1: Summary Overview ---
+  const summarySheet = workbook.addWorksheet('Summary Overview');
+  summarySheet.columns = [
+    { header: 'URL', key: 'url', width: 45 },
+    { header: 'Mobile Perf', key: 'mPerf', width: 15 },
+    { header: 'Mobile A11y', key: 'mA11y', width: 15 },
+    { header: 'Mobile SEO', key: 'mSeo', width: 15 },
+    { header: 'Desktop Perf', key: 'dPerf', width: 15 },
+    { header: 'Desktop A11y', key: 'dA11y', width: 15 },
+    { header: 'Desktop SEO', key: 'dSeo', width: 15 },
+    { header: 'Mobile HTML Report', key: 'mReport', width: 30 },
+    { header: 'Desktop HTML Report', key: 'dReport', width: 30 }
+  ];
+
+  summarySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+  summarySheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '4F46E5' } };
+
+  // --- SHEET 2: Detailed Recommendations ---
+  const recsSheet = workbook.addWorksheet('Detailed Recommendations');
+  recsSheet.columns = [
+    { header: 'URL', key: 'url', width: 45 },
+    { header: 'Device', key: 'device', width: 12 },
+    { header: 'Recommendation / Opportunity', key: 'title', width: 40 },
+    { header: 'Potential Savings / Impact', key: 'impact', width: 25 }
+  ];
+
+  recsSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+  recsSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '0EA5E9' } };
+
+  // Populate Data
+  data.pages.forEach(p => {
+    // Add to Summary
+    summarySheet.addRow({
+      url: p.url,
+      mPerf: p.mobile?.scores?.performance ?? 'N/A',
+      mA11y: p.mobile?.scores?.accessibility ?? 'N/A',
+      mSeo: p.mobile?.scores?.seo ?? 'N/A',
+      dPerf: p.desktop?.scores?.performance ?? 'N/A',
+      dA11y: p.desktop?.scores?.accessibility ?? 'N/A',
+      dSeo: p.desktop?.scores?.seo ?? 'N/A',
+      mReport: p.mobile?.reportFile ? `${req.protocol}://${req.get('host')}/${p.mobile.reportFile}` : 'N/A',
+      dReport: p.desktop?.reportFile ? `${req.protocol}://${req.get('host')}/${p.desktop.reportFile}` : 'N/A'
+    });
+
+    // Add Mobile Recommendations to Sheet 2
+    if (p.mobile?.recommendations) {
+      p.mobile.recommendations.forEach(r => {
+        recsSheet.addRow({
+          url: p.url,
+          device: 'Mobile',
+          title: r.title,
+          impact: r.displayValue || `${r.savingsMs} ms`
+        });
+      });
+    }
+
+    // Add Desktop Recommendations to Sheet 2
+    if (p.desktop?.recommendations) {
+      p.desktop.recommendations.forEach(r => {
+        recsSheet.addRow({
+          url: p.url,
+          device: 'Desktop',
+          title: r.title,
+          impact: r.displayValue || `${r.savingsMs} ms`
+        });
+      });
+    }
+  });
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename="lighthouse-comprehensive-report.xlsx"');
+
+  await workbook.xlsx.write(res);
   res.end();
 });
 

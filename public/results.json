@@ -1,115 +1,82 @@
 {
-  "generatedAt": "2026-11-17T11:14:05.726Z",
-  "durationMinutes": "5.0",
-  "totalUrls": 3,
+  "generatedAt": "2026-11-17T14:17:52.740Z",
+  "durationMinutes": "3.3",
+  "totalUrls": 2,
   "overall": {
     "mobile": {
-      "performance": 62,
+      "performance": 61,
       "accessibility": 96,
       "seo": 100
     },
     "desktop": {
-      "performance": 37,
+      "performance": 40,
       "accessibility": 96,
       "seo": 100
     }
   },
   "pages": [
     {
-      "url": "https://www.bharatiyadharmavikas.com",
+      "url": "https://www.bharatiyadharmavikas.com/",
       "mobile": {
         "scores": {
-          "performance": 56,
+          "performance": 52,
           "accessibility": 96,
           "seo": 100
         },
-        "reportFile": "reports/https___www_bharatiyadharmavikas_com_mobile.html",
+        "reportFile": "reports/https___www_bharatiyadharmavikas_com__mobile.html",
         "recommendations": [
           {
             "title": "Reduce unused JavaScript",
-            "savingsMs": 170,
-            "displayValue": "Est savings of 51 KiB"
+            "savingsMs": 240,
+            "displayValue": "Est savings of 77 KiB"
           }
         ]
       },
       "desktop": {
         "scores": {
-          "performance": 32,
+          "performance": 33,
           "accessibility": 96,
           "seo": 100
         },
-        "reportFile": "reports/https___www_bharatiyadharmavikas_com_desktop.html",
+        "reportFile": "reports/https___www_bharatiyadharmavikas_com__desktop.html",
         "recommendations": [
           {
             "title": "Reduce unused JavaScript",
-            "savingsMs": 180,
-            "displayValue": "Est savings of 51 KiB"
+            "savingsMs": 240,
+            "displayValue": "Est savings of 77 KiB"
           }
         ]
       }
     },
     {
-      "url": "https://www.bharatiyadharmavikas.com/dharma",
+      "url": "https://www.bharatiyadharmavikas.com/temples",
       "mobile": {
         "scores": {
-          "performance": 63,
+          "performance": 70,
           "accessibility": 96,
           "seo": 100
         },
-        "reportFile": "reports/https___www_bharatiyadharmavikas_com_dha_mobile.html",
+        "reportFile": "reports/https___www_bharatiyadharmavikas_com_tem_mobile.html",
         "recommendations": [
           {
             "title": "Reduce unused JavaScript",
-            "savingsMs": 150,
-            "displayValue": "Est savings of 56 KiB"
+            "savingsMs": 450,
+            "displayValue": "Est savings of 78 KiB"
           }
         ]
       },
       "desktop": {
         "scores": {
-          "performance": 38,
+          "performance": 46,
           "accessibility": 96,
           "seo": 100
         },
-        "reportFile": "reports/https___www_bharatiyadharmavikas_com_dha_desktop.html",
+        "reportFile": "reports/https___www_bharatiyadharmavikas_com_tem_desktop.html",
         "recommendations": [
           {
             "title": "Reduce unused JavaScript",
-            "savingsMs": 0,
-            "displayValue": "Est savings of 22 KiB"
-          }
-        ]
-      }
-    },
-    {
-      "url": "https://www.bharatiyadharmavikas.com/history",
-      "mobile": {
-        "scores": {
-          "performance": 67,
-          "accessibility": 96,
-          "seo": 100
-        },
-        "reportFile": "reports/https___www_bharatiyadharmavikas_com_his_mobile.html",
-        "recommendations": [
-          {
-            "title": "Reduce unused JavaScript",
-            "savingsMs": 0,
-            "displayValue": "Est savings of 47 KiB"
-          }
-        ]
-      },
-      "desktop": {
-        "scores": {
-          "performance": 41,
-          "accessibility": 96,
-          "seo": 100
-        },
-        "reportFile": "reports/https___www_bharatiyadharmavikas_com_his_desktop.html",
-        "recommendations": [
-          {
-            "title": "Reduce unused JavaScript",
-            "savingsMs": 340,
-            "displayValue": "Est savings of 56 KiB"
+            "savingsMs": 450,
+            "displayValue": "Est savings of 78 KiB"
           }
         ]
       }
